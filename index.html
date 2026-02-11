@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ChallengeNest Quiz</title>
+<style>
+body{font-family:Arial,sans-serif;margin:0;background:#f0f4f7;color:#333;}
+header{background:#2c3e50;color:#fff;padding:30px;text-align:center;position:relative;}
+header h1{margin:0;font-size:2.5em;}
+header p{margin:5px 0;}
+nav{display:flex;flex-wrap:wrap;justify-content:center;background:#2980b9;}
+nav button{margin:5px;padding:10px 20px;border:none;border-radius:20px;background:#3498db;color:#fff;cursor:pointer;font-weight:bold;transition:0.3s;}
+nav button.active{background:#1f618d;}
+nav button:hover{background:#1f618d;}
+#container{width:95%;max-width:900px;margin:20px auto;background:#fff;padding:20px;border-radius:15px;box-shadow:0 0 15px rgba(0,0,0,0.2);}
+input,select,textarea{width:95%;padding:8px;margin:5px 0;border-radius:5px;border:1px solid #ccc;}
+button{cursor:pointer;}
+.profile-avatar{width:50px;height:50px;border-radius:50%;display:block;margin:auto;border:2px solid #2980b9;}
+h2,h3,p{margin:10px 0;}
+#options button{width:90%;margin:10px auto;display:block;padding:12px;background:#27ae60;color:#fff;border:none;border-radius:10px;font-weight:bold;transition:0.2s;}
+#options button:hover{background:#1e8449;}
+img.question-img{max-width:250px;display:block;margin:10px auto;border-radius:10px;}
+table{width:100%;border-collapse:collapse;}
+th,td{padding:10px;text-align:center;border:1px solid #2980b9;}
+</style>
+</head>
+<body>
+
+<header>
+<h1>ChallengeNest Quiz</h1>
+<p>Fun quizzes, learn and challenge yourself!</p>
+</header>
+
+<nav>
+<button id="profile-tab" class="active">Profile</button>
+<button id="quiz-tab">Quiz</button>
+<button id="leaderboard-tab">Leaderboard</button>
+<button id="admin-tab">Admin</button>
+<button id="about-tab">About</button>
+<button id="privacy-tab">Privacy</button>
+</nav>
+
+<div id="container">
+
+<!-- PROFILE -->
+<div id="profile-section">
+<h2>Profile</h2>
+<input type="text" id="profile-name" placeholder="Enter your name">
+<input type="text" id="profile-avatar" placeholder="Avatar image URL">
+<img id="avatar-preview" class="profile-avatar" src="">
+<button id="save-profile">Save Profile</button>
+<h3>Your Info</h3>
+<p id="display-name"></p>
+<img id="display-avatar" class="profile-avatar" src="">
+</div>
+
+<!-- QUIZ -->
+<div id="quiz-section" style="display:none;">
+<h2 id="quiz-level"></h2>
+<div id="question"></div>
+<img id="question-img" class="question-img" src="">
+<div id="options"></div>
+<p id="result"></p>
+<button id="next-btn" style="display:none;">Next Level</button>
+</div>
+
+<!-- LEADERBOARD -->
+<div id="leaderboard-section" style="display:none;">
+<h2>Leaderboard</h2>
+<table id="leaderboard-table">
+<tr><th>User</th><th>Avatar</th><th>Points</th></tr>
+</table>
+</div>
+
+<!-- ADMIN -->
+<div id="admin-section" style="display:none;">
+<h2>Admin Panel</h2>
+<p>Add a new question:</p>
+<input type="text" id="admin-subject" placeholder="Subject">
+<input type="number" id="admin-level" min="1" max="30" placeholder="Level">
+<select id="admin-audience">
+<option value="Kids">Kids</option>
+<option value="Adult">Adult</option>
+</select>
+<input type="text" id="admin-question" placeholder="Question text">
+<input type="text" id="admin-image" placeholder="Question image URL">
+<input type="text" id="admin-options" placeholder="Options (comma separated)">
+<input type="text" id="admin-answer" placeholder="Correct answer">
+<button id="add-question-btn">Add Question</button>
+<h3>All Questions:</h3>
+<ul id="question-list"></ul>
+</div>
+
+<!-- ABOUT -->
+<div id="about-section" style="display:none;">
+<h2>About ChallengeNest</h2>
+<p>This is a fun quiz website where you can challenge yourself and learn new topics. Complete quizzes, see your points, and climb the leaderboard!</p>
+</div>
+
+<!-- PRIVACY -->
+<div id="privacy-section" style="display:none;">
+<h2>Privacy Policy</h2>
+<p>We respect your privacy. All profile data (name, avatar) is stored locally in your browser. No personal information is shared.</p>
+</div>
+
+<script>
+// ---------- PROFILE ----------
+function loadProfile(){
+  let name=localStorage.getItem('cn_name')||'';
+  let avatar=localStorage.getItem('cn_avatar')||'';
+  document.getElementById('profile-name').value=name;
+  document.getElementById('profile-avatar').value=avatar;
+  document.getElementById('display-name').innerText=name?"Name: "+name:'';
+  document.getElementById('display-avatar').src=avatar||'';
+  document.getElementById('avatar-preview').src=avatar||'';
+}
+loadProfile();
+document.getElementById('save-profile').onclick=function(){
+  let name=document.getElementById('profile-name').value.trim();
+  let avatar=document.getElementById('profile-avatar').value.trim();
+  if(!name){alert("Enter name");return;}
+  localStorage.setItem('cn_name',name);
+  localStorage.setItem('cn_avatar',avatar);
+  loadProfile();
+  alert("Profile saved!");
+}
+document.getElementById('profile-avatar').oninput=function(){
+  document.getElementById('avatar-preview').src=this.value;
+}
+
+// ---------- NAV ----------
+const sections={
+  profile:'profile-section', quiz:'quiz-section', leaderboard:'leaderboard-section',
+  admin:'admin-section', about:'about-section', privacy:'privacy-section'
+};
+document.getElementById('profile-tab').onclick=()=>showSection('profile-section');
+document.getElementById('quiz-tab').onclick=()=>showSection('quiz-section');
+document.getElementById('leaderboard-tab').onclick=()=>showSection('leaderboard-section');
+document.getElementById('admin-tab').onclick=()=>showSection('admin-section');
+document.getElementById('about-tab').onclick=()=>showSection('about-section');
+document.getElementById('privacy-tab').onclick=()=>showSection('privacy-section');
+
+function showSection(id){
+  Object.values(sections).forEach(s=>document.getElementById(s).style.display='none');
+  document.getElementById(id).style.display='block';
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`#${id}-tab`)?.classList.add('active');
+}
+
+// ---------- QUIZ ----------
+let currentLevel=1;
+let currentQuestionIndex=0;
+let questions=JSON.parse(localStorage.getItem('cn_questions')||'[]');
+let score=0;
+
+function loadQuestion(){
+  if(currentLevel>30){document.getElementById('quiz-section').innerHTML=`🎉 Quiz Completed! Your score: ${score}`;updateLeaderboard();return;}
+  let q = questions.find(q=>q.level==currentLevel && q.audience=="Adult"); // default Adult
+  if(!q) q={question:"Sample Question "+currentLevel, options:["A","B","C","D"], answer:"A", image:"https://via.placeholder.com/200"};
+  document.getElementById('quiz-level').innerText="Level "+currentLevel;
+  document.getElementById('question').innerText=q.question;
+  document.getElementById('question-img').src=q.image;
+  const optsDiv=document.getElementById('options');
+  optsDiv.innerHTML="";
+  q.options.forEach(opt=>{
+    const btn=document.createElement('button');
+    btn.innerText=opt;
+    btn.onclick=()=>{
+      if(opt===q.answer) score+=10;
+      currentLevel++;
+      loadQuestion();
+    };
+    optsDiv.appendChild(btn);
+  });
+}
+
+// ---------- ADMIN ----------
+function renderQuestions(){
+  const list=document.getElementById('question-list');
+  list.innerHTML="";
+  questions.forEach((q,i)=>list.innerHTML+=`<li>${i+1}. Level ${q.level} | ${q.audience} | ${q.question}</li>`);
+}
+document.getElementById('add-question-btn').onclick=()=>{
+  const subj=document.getElementById('admin-subject').value.trim();
+  const lvl=parseInt(document.getElementById('admin-level').value);
+  const aud=document.getElementById('admin-audience').value;
+  const txt=document.getElementById('admin-question').value.trim();
+  const img=document.getElementById('admin-image').value.trim()||"https://via.placeholder.com/200";
+  const opts=document.getElementById('admin-options').value.split(",");
+  const ans=document.getElementById('admin-answer').value.trim();
+  if(!txt || opts.length<2 || !ans){alert("Fill all fields");return;}
+  questions.push({subject:subj, level:lvl, audience:aud, question:txt, image:img, options:opts, answer:ans});
+  localStorage.setItem('cn_questions',JSON.stringify(questions));
+  renderQuestions();
+  alert("Question added!");
+}
+renderQuestions();
+
+// ---------- LEADERBOARD ----------
+function updateLeaderboard(){
+  const tbl=document.getElementById('leaderboard-table');
+  tbl.innerHTML="<tr><th>User</th><th>Avatar</th><th>Points</th></tr>";
+  const name=localStorage.getItem('cn_name')||'Guest';
+  const avatar=localStorage.getItem('cn_avatar')||'https://via.placeholder.com/50';
+  tbl.innerHTML+=`<tr><td>${name}</td><td><img src="${avatar}" class="profile-avatar"></td><td>${score}</td></tr>`;
+}
+
+// Start quiz
+document.getElementById('quiz-tab').onclick=()=>{
+  showSection('quiz-section');
+  currentLevel=1;
+  score=0;
+  loadQuestion();
+}
+</script>
+
+</body>
+</html>
